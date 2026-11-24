@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('role', 20)->default('petugas');
+            $table->string('role', 20)->default('petugas'); // buat admin/petugas
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();
