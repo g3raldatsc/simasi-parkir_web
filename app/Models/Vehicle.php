@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+#[Fillable(['plate_number', 'owner_name'])]
+class Vehicle extends Model
+{
+    use HasFactory;
+
+    /**
+     * @return HasMany<ParkingTransaction, $this>
+     */
+    public function parkingTransactions(): HasMany
+    {
+        return $this->hasMany(ParkingTransaction::class);
+    }
+}

@@ -14,49 +14,130 @@ class ParkingDemoSeeder extends Seeder
     {
         $now = now();
 
-        DB::table('blocks')->upsert([
-            ['code' => 'A', 'name' => 'Blok A', 'created_at' => $now, 'updated_at' => $now],
-            ['code' => 'B', 'name' => 'Blok B', 'created_at' => $now, 'updated_at' => $now],
-        ], ['code'], ['name', 'updated_at']);
-
-        $mapCells = [
-            ['x' => 0, 'y' => 1, 'type' => 'entrance', 'label' => 'Pintu Masuk'],
+        $blocksData = [
+            ['code' => 'A', 'name' => 'Blok A'],
+            ['code' => 'B', 'name' => 'Blok B'],
+            ['code' => 'C', 'name' => 'Blok C'],
+            ['code' => 'D', 'name' => 'Blok D'],
+            ['code' => 'E', 'name' => 'Blok E'],
+            ['code' => 'F', 'name' => 'Blok F'],
+            ['code' => 'G', 'name' => 'Blok G'],
+            ['code' => 'H', 'name' => 'Blok H'],
+            ['code' => 'I', 'name' => 'Blok I'],
+            ['code' => 'J', 'name' => 'Blok J'],
+            ['code' => 'K', 'name' => 'Blok K'],
         ];
 
-        foreach (['A' => 1, 'B' => 2] as $blockCode => $y) {
-            for ($number = 1; $number <= 4; $number++) {
-                $mapCells[] = [
-                    'x' => $number,
-                    'y' => $y,
-                    'type' => 'slot',
-                    'label' => "{$blockCode}-{$number}",
+        foreach ($blocksData as &$block) {
+            $block['created_at'] = $now;
+            $block['updated_at'] = $now;
+        }
+        unset($block);
+
+        DB::table('blocks')->upsert($blocksData, ['code'], ['name', 'updated_at']);
+
+        // Define slot definitions: [blockCode => ['y' => row, 'x_range' => [min, max]]]
+        $slotDefinitions = [
+            'A' => ['y' => 2, 'x_start' => 1, 'x_end' => 5],
+            'B' => ['y' => 4, 'x_start' => 1, 'x_end' => 5],
+            'C' => ['y' => 6, 'x_start' => 1, 'x_end' => 5],
+            'D' => ['y' => 6, 'x_start' => 9, 'x_end' => 13],
+            'E' => ['y' => 8, 'x_start' => 1, 'x_end' => 5],
+            'F' => ['y' => 8, 'x_start' => 9, 'x_end' => 13],
+            'G' => ['y' => 10, 'x_start' => 1, 'x_end' => 5],
+            'H' => ['y' => 10, 'x_start' => 9, 'x_end' => 13],
+            'I' => ['y' => 12, 'x_start' => 1, 'x_end' => 5],
+            'J' => ['y' => 12, 'x_start' => 9, 'x_end' => 13],
+            'K' => ['y' => 14, 'x_start' => 1, 'x_end' => 8],
+        ];
+
+        // Define obstacles
+        $obstacles = [];
+        // Pos: x 9..13, y 1..2
+        for ($x = 9; $x <= 13; $x++) {
+            for ($y = 1; $y <= 2; $y++) {
+                $obstacles["{$x}:{$y}"] = 'Pos';
+            }
+        }
+        // Gudang: x 9..13, y 3..4
+        for ($x = 9; $x <= 13; $x++) {
+            for ($y = 3; $y <= 4; $y++) {
+                $obstacles["{$x}:{$y}"] = 'Gudang';
+            }
+        }
+        // Gedung: x 9..13, y 14
+        for ($x = 9; $x <= 13; $x++) {
+            $obstacles["{$x}:14"] = 'Gedung';
+        }
+
+        // Map cells list
+        $mapCells = [
+            ['x' => 8, 'y' => 0, 'type' => 'entrance', 'label' => 'Gerbang Parkir'],
+        ];
+
+        // Track slot coordinates
+        $slotCoordinates = [];
+        foreach ($slotDefinitions as $code => $def) {
+            $slotNum = 1;
+            for ($x = $def['x_start']; $x <= $def['x_end']; $x++) {
+                $coord = "{$x}:{$def['y']}";
+                $slotCoordinates[$coord] = [
+                    'block' => $code,
+                    'number' => $slotNum,
+                    'label' => "{$code}-{$slotNum}",
                 ];
+                $slotNum++;
+            }
+        }
+
+        // Generate 13 x 14 grid
+        for ($y = 1; $y <= 14; $y++) {
+            for ($x = 1; $x <= 13; $x++) {
+                $coord = "{$x}:{$y}";
+
+                if (isset($slotCoordinates[$coord])) {
+                    $mapCells[] = [
+                        'x' => $x,
+                        'y' => $y,
+                        'type' => 'slot',
+                        'label' => $slotCoordinates[$coord]['label'],
+                    ];
+                } elseif (isset($obstacles[$coord])) {
+                    $mapCells[] = [
+                        'x' => $x,
+                        'y' => $y,
+                        'type' => 'obstacle',
+                        'label' => $obstacles[$coord],
+                    ];
+                } else {
+                    $mapCells[] = [
+                        'x' => $x,
+                        'y' => $y,
+                        'type' => 'road',
+                        'label' => null,
+                    ];
+                }
             }
         }
 
         DB::table('map_cells')->upsert($mapCells, ['x', 'y'], ['type', 'label']);
 
-        $blockIds = DB::table('blocks')
-            ->whereIn('code', ['A', 'B'])
-            ->pluck('id', 'code');
+        $blockIds = DB::table('blocks')->pluck('id', 'code');
         $mapCellIds = DB::table('map_cells')
             ->get(['id', 'x', 'y'])
             ->mapWithKeys(fn (object $cell): array => ["{$cell->x}:{$cell->y}" => $cell->id]);
 
         $slots = [];
-
-        foreach (['A' => 1, 'B' => 2] as $blockCode => $y) {
-            for ($number = 1; $number <= 4; $number++) {
-                $slots[] = [
-                    'block_id' => $blockIds[$blockCode],
-                    'map_cell_id' => $mapCellIds["{$number}:{$y}"],
-                    'number' => $number,
-                    'is_active' => true,
-                    'notes' => null,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
+        foreach ($slotCoordinates as $coord => $info) {
+            $slots[] = [
+                'block_id' => $blockIds[$info['block']],
+                'map_cell_id' => $mapCellIds[$coord],
+                'number' => $info['number'],
+                'is_active' => true,
+                'notes' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
 
         DB::table('slots')->upsert(

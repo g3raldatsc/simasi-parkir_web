@@ -2,16 +2,43 @@
 
 SIMASI-PARKIR adalah aplikasi web untuk mengelola parkir sepeda motor di Fakultas Ilmu Komputer Universitas Jember. Aplikasi ini dibangun dengan Laravel, Blade, Bootstrap, dan MySQL.
 
-## Kebutuhan
+## Kebutuhan Sistem
 
 - PHP 8.3 atau lebih baru
 - Composer
-- MySQL
-- Node.js dan npm
+- MySQL (disarankan via Laragon)
+- Git
 
-## Menyiapkan database
+## Langkah Instalasi Pertama Kali
 
-Jalankan MySQL melalui Laragon, lalu buat database kosong:
+Ikuti langkah-langkah berikut secara berurutan setelah meng-clone project:
+
+### 1. Clone repository dan masuk ke folder project
+
+```bash
+git clone https://github.com/g3raldatsc/simasi-parkir_web.git
+cd simasi-parkir_web
+```
+
+### 2. Pasang dependensi PHP
+
+```bash
+composer install
+```
+
+### 3. Salin file environment dan generate application key
+
+Untuk Git Bash / Linux / macOS / PowerShell:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+*(Atau di CMD Windows: `copy .env.example .env`)*
+
+### 4. Siapkan database MySQL
+
+Nyalakan MySQL (misalnya melalui Laragon), lalu buat database kosong:
 
 ```sql
 CREATE DATABASE simasi_parkir
@@ -19,7 +46,7 @@ CREATE DATABASE simasi_parkir
     COLLATE utf8mb4_unicode_ci;
 ```
 
-Pastikan pengaturan database pada `.env` menunjuk ke database tersebut:
+Pastikan pengaturan database di file `.env` sudah sesuai:
 
 ```env
 DB_CONNECTION=mysql
@@ -30,93 +57,84 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-Jangan menimpa `.env` yang sudah ada karena file itu dapat berisi konfigurasi lokal.
+### 5. Jalankan migrasi dan isi data demo
 
-## Instalasi pertama kali
-
-Dari PowerShell, jalankan perintah berikut di folder project:
-
-```powershell
-cd C:\laragon\www\simasi-parkir_web
-composer install
-```
-
-Jika `.env` belum ada, salin template dan buat application key:
-
-```powershell
-Copy-Item .env.example .env
-php artisan key:generate
-```
-
-Sesuaikan kredensial MySQL di `.env`, lalu buat tabel dan data demo:
-
-```powershell
+```bash
 php artisan migrate --seed
 ```
 
-Pasang dan build asset frontend:
+> [!NOTE]
+> Aset tampilan menggunakan Bootstrap 5 via CDN dan stylesheet statis di folder `public/`, sehingga Anda tidak perlu menjalankan build frontend dengan npm untuk menjalankan aplikasi.
 
-```powershell
-npm install
-npm run build
+### 6. Jalankan server aplikasi
+
+```bash
+php artisan serve
 ```
 
-## Membangun ulang database development
+Aplikasi dapat dibuka melalui browser di:
+- **Halaman Publik / Pencarian:** [http://127.0.0.1:8000](http://127.0.0.1:8000)
+- **Peta Parkir:** [http://127.0.0.1:8000/peta](http://127.0.0.1:8000/peta)
+- **Login Petugas / Admin:** [http://127.0.0.1:8000/login](http://127.0.0.1:8000/login)
 
-Jika database sudah berisi tabel dari setup SQL manual sebelumnya, migrasi Laravel belum mencatat atau mengelola tabel-tabel tersebut. Untuk menggantinya dengan skema migrasi project dan mengisi data demo, pastikan dulu `DB_DATABASE` benar-benar menunjuk ke database development `simasi_parkir`, lalu jalankan:
+---
 
-```powershell
+## Akun Demo untuk Pengujian
+
+Seeder (`php artisan db:seed` atau saat `migrate --seed`) secara otomatis membuat data awal:
+- Pengguna admin dan petugas.
+- Dua blok parkir dengan delapan slot dan satu sel peta untuk pintu masuk.
+- Tiga kendaraan.
+- Dua transaksi parkir aktif dan satu transaksi yang sudah selesai.
+
+Kredensial akun untuk pengujian lokal:
+
+| Peran | Email | Password | Akses URL |
+|---|---|---|---|
+| Admin | `admin@simasi.test` | `password` | `/login` |
+| Petugas | `petugas@simasi.test` | `password` | `/login` |
+
+Setelah login, pengguna akan diarahkan ke dashboard panel petugas/admin.
+
+---
+
+## Membangun Ulang Database Development
+
+Jika ingin mereset dan mengisi ulang database dari awal (misalnya setelah ada perubahan skema migrasi atau seeder):
+
+```bash
 php artisan config:clear
 php artisan db:wipe --database=mysql --force
 php artisan migrate --seed --force
 ```
 
-**Perhatian:** `db:wipe` menghapus semua tabel dan data di database yang sedang dipilih. Jangan jalankan pada database penting atau production. Untuk database kosong, perintah wipe tidak diperlukan; cukup gunakan `php artisan migrate --seed`.
+> [!WARNING]
+> Perintah `db:wipe` akan menghapus seluruh tabel dan data pada database yang sedang aktif. Pastikan hanya dijalankan di environment lokal/development.
 
-Untuk melihat status migrasi:
+Untuk mengecek status migrasi saat ini:
 
-```powershell
+```bash
 php artisan migrate:status
 ```
 
-## Data demo
+---
 
-Seeder membuat:
+## Menjalankan Pengujian (Testing)
 
-- Pengguna admin dan petugas.
-- Dua blok parkir dengan delapan slot dan satu sel peta untuk pintu masuk.
-- Tiga kendaraan.
-- Dua transaksi yang masih aktif dan satu transaksi yang sudah selesai.
+Untuk memastikan seluruh pengujian otomatis (Unit dan Feature tests) berjalan dengan baik:
 
-Akun lokal untuk pengujian:
-
-| Peran | Email | Password |
-|---|---|---|
-| Admin | `admin@simasi.test` | `password` |
-| Petugas | `petugas@simasi.test` | `password` |
-
-Kredensial tersebut hanya untuk development. Route login aplikasi belum diimplementasikan.
-
-## Menjalankan aplikasi
-
-Jalankan server Laravel:
-
-```powershell
-php artisan serve
-```
-
-Buka `http://127.0.0.1:8000`. Untuk pengembangan frontend dengan Vite hot reload, jalankan juga di terminal terpisah:
-
-```powershell
-npm run dev
-```
-
-## Pengujian
-
-```powershell
+```bash
 php artisan test
 ```
 
-## Tabel aplikasi
+---
 
-Migrasi Laravel mengelola tabel `users`, `blocks`, `map_cells`, `vehicles`, `slots`, dan `parking_transactions`, beserta tabel pendukung Laravel untuk sessions, cache, dan jobs.
+## Struktur Modul & Tabel
+
+Routing aplikasi dipisahkan per modul di direktori `routes/modules/`:
+- `auth.php` : Autentikasi (login, logout, dashboard, pengguna)
+- `master.php` : Master data (blok, slot parkir)
+- `parkir.php` : Operasional parkir (kendaraan masuk/keluar, transaksi, riwayat)
+- `publik.php` : Tampilan publik (beranda, pencarian motor, visualisasi peta parkir)
+
+Tabel utama yang dikelola oleh migrasi Laravel meliputi: `users`, `blocks`, `slots`, `map_cells`, `vehicles`, dan `parking_transactions`.

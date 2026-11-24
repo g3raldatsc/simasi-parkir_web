@@ -27,9 +27,9 @@ class DatabaseSeederTest extends TestCase
             DB::table('users')->where('email', 'admin@simasi.test')->value('password'),
         ));
 
-        $this->assertDatabaseCount('blocks', 2);
-        $this->assertDatabaseCount('map_cells', 9);
-        $this->assertDatabaseCount('slots', 8);
+        $this->assertDatabaseCount('blocks', 11);
+        $this->assertDatabaseCount('map_cells', 183);
+        $this->assertDatabaseCount('slots', 58);
         $this->assertDatabaseCount('vehicles', 3);
         $this->assertDatabaseCount('parking_transactions', 3);
         $this->assertSame(
