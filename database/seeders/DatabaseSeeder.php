@@ -8,9 +8,13 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Urutan penting: blok dan denah harus ada sebelum slot
         $this->call([
             UserSeeder::class,
-            // Otw gua akan menambahkan: BlockSeeder, MapCellSeeder, SlotSeeder
+            BlockSeeder::class,
+            MapCellSeeder::class,
+            SlotSeeder::class,
+            // Siappaun nanti tambahkan: DemoTransactionSeeder
         ]);
     }
 }
