@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Modul Gerald dan Gilang: login, logout, dashboard, pengguna
@@ -16,17 +18,10 @@ Route::middleware('guest')->group(function () {
 // Hanya untuk yang sudah login
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-    // Sementara doang: dashboard sederhana, diganti DashboardController di Tahap 5
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
 });
 
-// sementara juga: halaman uji, dihapus pada akhir Tahap 5.
-Route::view('/uji/panel', 'uji.panel');
-Route::get('/uji/flash', function () {
-    return redirect('/uji/panel')
-        ->with('success', 'Pesan sukses tampil otomatis dan hilang sendiri.')
-        ->with('error', 'Ini contoh pesan kesalahan.');
+// Hanya untuk admin
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::resource('users', UserController::class)->except('show');
 });
-Route::get('/uji/admin', fn () => 'Halaman khusus admin berhasil dibuka.')
-    ->middleware(['auth', 'role:admin']);
