@@ -17,6 +17,7 @@ cd simasi-parkir_web
 
 ```bash
 
+composer install
 npm install
 
 ```
@@ -41,13 +42,6 @@ php artisan migrate
 
 ```bash
 
-php artisan key:generate
-
-```
-
-```bash
-
 php artisan db:seed
 
 ```
-
